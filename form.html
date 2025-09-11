@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Formulir Pembelian</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-gradient-to-br from-gray-900 to-black text-white min-h-screen flex items-center justify-center">
+
+  <div class="bg-gray-800/80 p-6 rounded-xl shadow-lg w-full max-w-md">
+    <h2 class="text-xl font-bold mb-4">💳 Formulir Pembelian</h2>
+    <p id="produkTerpilih" class="text-center text-yellow-400 mb-4"></p>
+    
+    <p class="text-center text-red-400 font-semibold mb-4">Silahkan ditransfer terlebih dahulu</p>
+
+    <form id="paymentForm" class="space-y-3">
+      <input type="text" id="name" placeholder="Nama Anda"
+        class="w-full px-3 py-2 rounded-lg bg-gray-700 focus:outline-none" required>
+
+      <input type="email" id="email" placeholder="Email Anda"
+        class="w-full px-3 py-2 rounded-lg bg-gray-700 focus:outline-none" required>
+
+      <label class="block text-sm text-gray-300">Pilih Bank / E-Wallet / QRIS:</label>
+      <select id="bank" class="w-full px-3 py-2 rounded-lg bg-gray-700 focus:outline-none" required>
+        <option value="DANA">DANA - 082123302182/Aldi Juli Saputra</option>
+        <option value="Seabank">Seabank - 901881696550/Aldi Juli Saputra</option>
+        <option value="BCA">BCA - 4142233766/Aldi Juli Saputra</option>
+        <option value="QRIS">QRIS</option>
+      </select>
+
+      <div id="qrisDiv" class="my-2 hidden text-center"></div>
+
+      <input type="number" id="jumlah" placeholder="Jumlah Deposit (IDR)"
+        class="w-full px-3 py-2 rounded-lg bg-gray-700 focus:outline-none" required readonly>
+
+      <textarea id="keterangan" placeholder="Keterangan (opsional)"
+        class="w-full px-3 py-2 rounded-lg bg-gray-700 focus:outline-none"></textarea>
+
+      <label class="block text-sm text-gray-300">Upload Bukti Pembayaran:</label>
+      <input type="file" id="bukti" accept="image/*"
+        class="w-full px-3 py-2 rounded-lg bg-gray-700 focus:outline-none" required>
+
+      <button type="submit"
+        class="w-full bg-yellow-500 hover:bg-yellow-600 text-black py-2 rounded-lg font-semibold">Kirim</button>
+    </form>
+
+    <div id="result" class="hidden mt-4 text-center">
+      <h3 class="text-lg font-semibold mb-2 text-green-400">✅ Data berhasil dikirim!</h3>
+      <p class="mb-2 text-sm text-gray-300">Silakan hubungi admin melalui sosial media untuk konfirmasi:</p>
+      <div class="flex gap-3 justify-center">
+        <a href="https://wa.me/6285210441979" target="_blank"
+           class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg">WhatsApp</a>
+        <a href="https://discord.gg/DMKxAh8x3j" target="_blank"
+           class="bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-lg">Discord</a>
+        <a href="https://www.instagram.com/aldi_5301?igsh=NXhkeWp5bXRtM2Fy" target="_blank"
+           class="bg-pink-600 hover:bg-pink-700 px-4 py-2 rounded-lg">Instagram</a>
+        <a href="https://www.facebook.com/share/1GogBFFcut/" target="_blank"
+           class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg">Facebook</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const bankSelect = document.getElementById("bank");
+    const qrisDiv = document.getElementById("qrisDiv");
+    const urlParams = new URLSearchParams(window.location.search);
+    const namaProduk = urlParams.get('produk');
+    const hargaProduk = urlParams.get('harga');
+    
+    // Auto-fill dan kunci input jumlah
+    if (hargaProduk) {
+        document.getElementById("jumlah").value = hargaProduk;
+    }
+
+    if (namaProduk) {
+        document.getElementById("produkTerpilih").innerText = `Anda akan membeli: ${namaProduk}`;
+    }
+
+    bankSelect.addEventListener("change", () => {
+      if (bankSelect.value === "QRIS") {
+        qrisDiv.innerHTML = `<img src="https://i.ibb.co/B5V0W1dL/QrisAldi.jpg" alt="QRIS">`;
+        qrisDiv.classList.remove("hidden");
+      } else {
+        qrisDiv.innerHTML = "";
+        qrisDiv.classList.add("hidden");
+      }
+    });
+
+    document.getElementById("paymentForm").addEventListener("submit", function(e) {
+      e.preventDefault();
+
+      const bukti = document.getElementById("bukti").files[0];
+      if (!bukti) {
+        alert("Harap upload bukti pembayaran!");
+        return;
+      }
+
+      const name = document.getElementById("name").value;
+      const email = document.getElementById("email").value;
+      const bank = document.getElementById("bank").value;
+      const jumlah = document.getElementById("jumlah").value;
+      const keterangan = document.getElementById("keterangan").value || "-";
+
+      // Membuat payload untuk Discord Webhook
+      const webhookURL = "https://discord.com/api/webhooks/1415696465040248902/35arhe9ut9ti1d95q4VS9telnmpCJa3zE3dPyLWjjW3cYxU7kX28xstz9jDsXad-Q4JX";
+      const payload = {
+        embeds: [{
+          title: `🛍️ Transaksi Baru: ${namaProduk}`,
+          description: "Ada pesanan baru yang masuk!",
+          color: 3447003, // Warna biru
+          fields: [
+            { name: "Nama Pembeli", value: name, inline: true },
+            { name: "Email", value: email, inline: true },
+            { name: "Produk", value: namaProduk, inline: false },
+            { name: "Jumlah Pembayaran", value: `Rp ${jumlah}`, inline: true },
+            { name: "Metode Pembayaran", value: bank, inline: true },
+            { name: "Keterangan", value: keterangan, inline: false }
+          ],
+          thumbnail: {
+            url: "https://via.placeholder.com/100" // Ganti dengan URL foto produk jika ada
+          }
+        }]
+      };
+
+      // Mengirim data ke Discord Webhook
+      fetch(webhookURL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error("Gagal mengirim notifikasi ke Discord.");
+        }
+        console.log("Notifikasi berhasil dikirim ke Discord.");
+      })
+      .catch(error => {
+        console.error("Kesalahan:", error);
+        alert("Terjadi kesalahan saat mengirim notifikasi.");
+      });
+
+      // Simpan data transaksi ke localStorage
+      let transactions = JSON.parse(localStorage.getItem("transactions")) || [];
+      transactions.push({
+        nama: name,
+        email: email,
+        produk: namaProduk,
+        harga: jumlah,
+        bank: bank,
+        keterangan: keterangan,
+        tanggal: new Date().toLocaleString()
+      });
+      localStorage.setItem("transactions", JSON.stringify(transactions));
+
+      // Tandai produk sebagai terjual
+      localStorage.setItem("produkTerjual", namaProduk); 
+
+      document.getElementById("paymentForm").classList.add("hidden");
+      document.getElementById("result").classList.remove("hidden");
+    });
+  </script>
+</body>
+</html>
